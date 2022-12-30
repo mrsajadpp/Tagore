@@ -17,7 +17,7 @@ var app = express();
 app.set('views', path.join(__dirname, 'views'));
 app.use(favicon(path.join(__dirname, 'public', '/images/favicon.jpg')));
 app.engine('hbs', handlebars.engine({ extname: 'hbs', defaultLayout: 'layout', layoutsDir: __dirname + '/views/layouts/', partialsDir: __dirname + '/views/partials/' }));
-app.use(session({ secret:"@tagorebskt@#]$", cookie: { maxAge: 30000 } }));
+app.use(session({ secret:"@tagorebskt@#]$"/*, cookie: { maxAge: 1000000 }*/ }));
 app.set('view engine', 'hbs');
 
 app.use(logger('dev'));
@@ -42,7 +42,7 @@ app.use(function(err, req, res, next) {
 
   // render the error page
   res.status(err.status || 500);
-  res.render('error', { title: err.status || 500, description: err.message || 'Internal server error.', status: err.status || 500, message: err.message || 'Internal Server Error', user: req.session.user });
+  res.render('error', { title: err.status || 500, description: err.message || 'Internal server error.', status: err.status || 500, message: err.message || 'Internal Server Error', status : req.session.status, user: req.session.user });
 });
 
 module.exports = app;
