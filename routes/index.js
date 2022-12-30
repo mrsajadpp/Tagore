@@ -13,11 +13,28 @@ let transporter = nodemailer.createTransport({
   },
 });
 
+//Check login
+function verifyLogin(req, res, next) {
+  if (req.session.user) {
+    if (req.session.user.admin || req.session.user.staff) {
+      req.session.status = true
+      next()
+    } else {
+      req.session.status = false
+      next()
+    }
+  } else {
+    req.session.status = false
+    next()
+  }
+}
+
 //Admin validation
 function verifyAdmin(req, res, next) {
   try {
     if (req.session.user) {
       if (req.session.user.admin) {
+        req.session.status = true
         next();
       } else {
         res.redirect('/admin/login')
@@ -66,88 +83,128 @@ function mail(message) {
 
 //Get methods
 //Home
-router.get('/', (req, res, next) => {
+router.get('/', verifyLogin, (req, res, next) => {
   try {
-    res.render('pages/index', { title: 'Tagore College And Computer Academy', description: 'Tagore college and computer academy', user: req.session.user });
+    res.render('pages/index', { title: 'Tagore College And Computer Academy', description: 'Tagore college and computer academy', status : req.session.status, user: req.session.user });
   } catch (err) {
     console.error(err)
   }
 });
 //College Home
-router.get('/college', (req, res, next) => {
+router.get('/college', verifyLogin, (req, res, next) => {
   try {
-    res.render('pages/college', { title: 'Tagore College', description: 'Tagore College', user: req.session.user })
+    res.render('pages/college', { title: 'Tagore College', description: 'Tagore College', status : req.session.status, user: req.session.user })
   } catch (err) {
     console.error(err)
   }
 })
 //Terms and conditions
-router.get('/termsconditions', (req, res, next) => {
+router.get('/termsconditions', verifyLogin, (req, res, next) => {
   try {
-    res.render('pages/terms-conditions', { title: 'Terms And Conditions', description: 'Our Terms And Conditions', user: req.session.user });
+    res.render('pages/terms-conditions', { title: 'Terms And Conditions', description: 'Our Terms And Conditions', status : req.session.status, user: req.session.user });
   } catch (err) {
     console.error(err)
   }
 })
 //Privacy policy
-router.get('/privacypolicy', (req, res, next) => {
+router.get('/privacypolicy', verifyLogin, (req, res, next) => {
   try {
-    res.render('pages/privacy-policy', { title: 'Privacy Policy', description: 'Our Privacy Policy', user: req.session.user });
+    res.render('pages/privacy-policy', { title: 'Privacy Policy', description: 'Our Privacy Policy', status : req.session.status, user: req.session.user });
   } catch (err) {
     console.error(err)
   }
 })
 //Contact
-router.get('/contact', (req, res, next) => {
+router.get('/contact', verifyLogin, (req, res, next) => {
   try {
-    res.render('pages/contact', { title: 'Contact Us', description: 'Contact our team', user: req.session.user });
+    res.render('pages/contact', { title: 'Contact Us', description: 'Contact our team', status : req.session.status, user: req.session.user });
   } catch (err) {
     console.error(err)
   }
 })
 //Mission and vision
-router.get('/visionandmission', (req, res, next) => {
+router.get('/visionandmission', verifyLogin, (req, res, next) => {
   try {
-    res.render('pages/vision', { title: 'Mission And Vision', description: 'Our Mission And Vision', user: req.session.user })
+    res.render('pages/vision', { title: 'Mission And Vision', description: 'Our Mission And Vision', status : req.session.status, user: req.session.user })
   } catch (err) {
     console.error(err)
   }
 })
 //Careers
-router.get('/careers', (req, res, next) => {
+router.get('/careers', verifyLogin, (req, res, next) => {
   try {
     console.log('Careers')
   } catch (err) {
     console.error(err)
   }
 })
-//Get subs
-router.get('/alert', verifyAdmin, (req, res, next) => {
+//Staff and admin enter page
+router.get('/enter', verifyLogin, (req, res, next) => {
+  try { 
+    if (req.session.status) {
+      res.render('pages/staff/enter', { title: "Admission", description: "Admission page", status: req.session.status, user: req.session.user })
+    } else {
+      res.redirect('/staff/login')
+    }
+  } catch (err) {
+    console.error(err);
+  }
+})
+//Enquiry form
+router.get('/staff/enquiry', verifyLogin, (req, res, next) => {
   try {
-    res.render('pages/alert', { title: 'Send Updates', description: 'Notify your subscribers' })
+    if (req.session.status) {
+      res.render('pages/staff/enquiry', { title: "Enquiry", description: "Enquiry form", status: req.session.status, user: req.session.user })
+    } else {
+      res.redirect('/staff/login')
+    }
+  } catch (err) {
+    console.error(err)
+  }
+})
+//Get subs
+router.get('/alert', verifyAdmin, verifyLogin, (req, res, next) => {
+  try {
+    res.render('pages/admin/alert', { title: 'Send Updates', description: 'Notify your subscribers', status: req.session.status, user: req.session.user })
   } catch (err) {
     console.error(err)
   }
 })
 //Course
-router.get('/course/:name', (req, res, next) => {
+router.get('/course/:name', verifyLogin, (req, res, next) => {
   try {
-    res.render('course/course', { title: req.params.name.toUpperCase(), description: req.params.name.toUpperCase(), course: req.params.name, hide: true, user: req.session.user })
+    res.render('course/course', { title: req.params.name.toUpperCase(), description: req.params.name.toUpperCase(), course: req.params.name, hide: true, status : req.session.status, user: req.session.user })
+  } catch (err) {
+    console.error(err)
+  }
+})
+//Staff Login
+router.get('/staff/login', verifyLogin, (req, res, next) => {
+  try {
+    if (req.session.user) {
+      if (req.session.user.staff || req.session.user.admin) {
+        res.redirect('/enter')
+      } else {
+        res.render('pages/staff/login', { title: "Staff Login", description: "Staff login page", status : req.session.status, user: req.session.user })
+      }
+    } else {
+      res.render('pages/staff/login', { title: "Staff Login", description: "Staff login page", status : req.session.status, user: req.session.user })
+    }
   } catch (err) {
     console.error(err)
   }
 })
 //Admin Login
-router.get('/admin/login', verifyUnlogin, (req, res, next) => {
+router.get('/admin/login', verifyUnlogin, verifyLogin, (req, res, next) => {
   try {
-    res.render('pages/login', { title: 'Admin Login', description: 'Admin login page', user: req.session.user })
+    res.render('pages/admin/login', { title: 'Admin Login', description: 'Admin login page', status : req.session.status, user: req.session.user })
   } catch (err) {
     console.error(err)
   }
 })
 
 //Post methods
-router.post('/subscribe', (req, res, next) => {
+router.post('/subscribe', verifyLogin, (req, res, next) => {
   try {
     userData.newSub(req.body).then((response) => {
       res.redirect('/')
@@ -156,7 +213,7 @@ router.post('/subscribe', (req, res, next) => {
     console.error(err)
   }
 })
-router.post('/contact', (req, res, next) => {
+router.post('/contact', verifyLogin, (req, res, next) => {
   try {
     mail({
       title: 'New message.',
@@ -323,7 +380,7 @@ router.post('/contact', (req, res, next) => {
     console.error(err)
   }
 })
-router.post('/notify', verifyAdmin, (req, res, next) => {
+router.post('/notify', verifyAdmin, verifyLogin, (req, res, next) => {
   try {
     userData.getSub().then((emails) => {
       for (let i = 0; i < emails.length; i++) {
@@ -498,11 +555,27 @@ router.post('/notify', verifyAdmin, (req, res, next) => {
     console.error(err)
   }
 })
-//Admin login
-router.post('/login', verifyUnlogin, (req, res, next) => {
+//Staff Login
+router.post('/staff/login', verifyLogin, (req, res, next) => {
   try {
-    console.log(req.body)
+    if (req.body.username == 'tagorestaff' && req.body.password == 'stafftgr1002') {
+      req.session.status = true
+      req.session.user = {
+        staff: true
+      }
+      res.redirect('/enter')
+    } else {
+      res.redirect('/staff/login')
+    }
+  } catch (err) {
+    console.error(err)
+  }
+})
+//Admin login
+router.post('/admin/login', verifyUnlogin, verifyLogin, (req, res, next) => {
+  try {
     if (req.body.username == 'tagoreacademy' && req.body.password == 'tagore786300') {
+      req.session.status = true
       req.session.user = {
         admin: true
       }
@@ -515,7 +588,7 @@ router.post('/login', verifyUnlogin, (req, res, next) => {
   }
 })
 //Robots.txt
-router.get('/robots.txt', (req, res, next) => {
+router.get('/robots.txt', verifyLogin, (req, res, next) => {
   try {
     res.type('text/plain')
     res.send('User-agent: * \n Allow: / \n Allow: /college \n Allow: /contact \n Allow: /visionandmission')
